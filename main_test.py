@@ -87,11 +87,11 @@ if len(version) > 0:
         arch.use_variation = False
         print(f'Use Variation for gradient loss: {arch.use_variation}')
 
-        arch.use_lsgan = False
+        arch.use_lsgan = True
         arch.detach_network = True
         small_batch = False
         cartoon_resize_mode = 'mixed'
-        pixel_resize_mode = 'mixed'
+        pixel_resize_mode = 'resize'
 
         data.max_epoch_size = 900
 
@@ -105,24 +105,32 @@ if len(version) > 0:
         # PN_option.weights = arch.Weights(l1=1.0, grad=1.0, image=1.0, net=1.0, null=1.0, gan=1.0/15, d_gan=1.0/15/25)
         # DN_option.weights = arch.Weights(l1=1.0*2, grad=1.0*0.5*1.5/1.5*2, image=1.0, net=1.0, null=1.0, gan=1.0/5, d_gan=1.0/5)
 
-        GN_option.weights = arch.Weights(l1=1.0*2, grad=1.0*0.5, image=1.0, net=1.0, null=1.0, gan=1.0/20, d_gan=1.0/20)
+        # GN_option.weights = arch.Weights(l1=1.0*2, grad=0.0*0.5, image=1.0, net=1.0, null=1.0, gan=1.0/20, d_gan=1.0/20)
+        # PN_option.weights = arch.Weights(l1=1.0, grad=1.0, image=1.0, net=1.0, null=1.0, gan=1.0/15, d_gan=1.0/15/25)
+        # DN_option.weights = arch.Weights(l1=1.0*2, grad=0.0*0.75, image=1.0, net=1.0, null=1.0, gan=1.0/10, d_gan=1.0/10)
+
+        # GN_option.weights = arch.Weights(l1=1.0*4/4, grad=0.0/25, image=1.0, net=1.0, null=1.0, gan=1.0/20*0.75, d_gan=1.0/20*0.75)
+        # PN_option.weights = arch.Weights(l1=1.0, grad=1.0, image=1.0, net=1.0, null=1.0, gan=1.0/15, d_gan=1.0/15/25)
+        # DN_option.weights = arch.Weights(l1=1.0*4/4, grad=0.0/25, image=1.0, net=1.0, null=1.0, gan=1.0/10*0.75, d_gan=1.0/10*0.75)
+
+        GN_option.weights = arch.Weights(l1=1.0*2/2, grad=1.0/25, image=1.0, net=1.0, null=1.0, gan=1.0/20*0.75, d_gan=1.0/20*0.75)
         PN_option.weights = arch.Weights(l1=1.0, grad=1.0, image=1.0, net=1.0, null=1.0, gan=1.0/15, d_gan=1.0/15/25)
-        DN_option.weights = arch.Weights(l1=1.0*2, grad=1.0*0.75, image=1.0, net=1.0, null=1.0, gan=1.0/10, d_gan=1.0/10)
-        GN_option.set_options(l1=True, grad=True and False, gan=True, image=True, network=False, idt=False)
-        PN_option.set_options(l1=True, grad=True and False, gan=True, image=True, network=False, idt=False)
-        DN_option.set_options(l1=True, grad=True and False, gan=True, image=True, network=False, idt=False)
+        DN_option.weights = arch.Weights(l1=1.0*2/2, grad=1.0/25, image=1.0, net=1.0, null=1.0, gan=1.0/10*0.75, d_gan=1.0/10*0.75)
+        GN_option.set_options(l1=True, grad=True and False, gan=True and False, image=True, network=False, idt=False)
+        PN_option.set_options(l1=True, grad=True and False, gan=True and False, image=True, network=False, idt=False)
+        DN_option.set_options(l1=True, grad=True and False, gan=True and False, image=True, network=False, idt=False)
         GN_option.set_interval(g=1, d=1)
         PN_option.set_interval(g=1, d=1)
         DN_option.set_interval(g=1, d=1)
 
-        GN_option.load_generator = False
-        GN_option.load_discriminator = False
-        PN_option.load_generator = False
-        PN_option.load_discriminator = False
-        DN_option.load_generator = False
-        DN_option.load_discriminator = False
+        # GN_option.load_generator = False
+        # GN_option.load_discriminator = False
+        # PN_option.load_generator = False
+        # PN_option.load_discriminator = False
+        # DN_option.load_generator = False
+        # DN_option.load_discriminator = False
 
-        lr_scheduler_initial_step = 100
+        lr_scheduler_initial_step = 150
         use_lr_scheduler = num_epochs > lr_scheduler_initial_step
         save_model = data.max_epoch_size >= 900 and num_epochs > 5 and not small_batch
 
@@ -877,9 +885,11 @@ if test_model:
 
                 else:
                     _, DN = DN_generator(test_image)
+                    _, GN_256 = GN_generator(DN)
 
                     if use_tensorboard:
                         writer.add_images('TEST/DN/BACKWARD/', DN / 2 + 0.5, i)
+                        writer.add_images('TEST/GN/BACKWARD/', GN_256 / 2 + 0.5, i)
                         writer.add_images('TEST/INPUT/BACKWARD/', test_image / 2 + 0.5, i)
     else:
         print('Testing directory does not exist.')
@@ -887,4 +897,3 @@ if test_model:
     print('Finished Testing')
 
 # tensorboard --logdir=C:\Users\Sinojapien\PycharmProjects\pixelization\tensorboard --port=6006
-# try gradient on mirror
